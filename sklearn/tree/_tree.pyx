@@ -1747,11 +1747,9 @@ cdef class Tree:
             node_id = self._add_node(parent, is_left, is_leaf, feature,
                                      threshold, impurity, n_node_samples)
 
-            if is_leaf:
-                # Don't store value for internal nodes
-                splitter.node_value(self.value + node_id * self.value_stride)
+            splitter.node_value(self.value + node_id * self.value_stride)
 
-            else:
+            if not is_leaf:
                 if stack_n_values + 10 > stack_capacity:
                     stack_capacity *= 2
                     stack = <SIZE_t*> realloc(stack,
