@@ -1742,6 +1742,8 @@ cdef class Tree:
             splitter.node_reset(start, end, &impurity)
             is_leaf = is_leaf or (impurity < 1e-7)
 
+            # Cache the values in case it is an internal split and they get overwritten
+            # Can't place them in self.values yet as no node_id and might need resizing first
             splitter.node_value(tmp_value)
 
             if not is_leaf:
