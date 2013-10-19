@@ -1723,6 +1723,8 @@ cdef class Tree:
 
         cdef SIZE_t node_id
 
+        cdef double* tmp_value = <double*> malloc(self.value_stride * sizeof(double))
+
         while stack_n_values > 0:
             stack_n_values -= 5
 
@@ -1740,6 +1742,8 @@ cdef class Tree:
             splitter.node_reset(start, end, &impurity)
             is_leaf = is_leaf or (impurity < 1e-7)
 
+            splitter.node_value(tmp_value)
+
             if not is_leaf:
                 splitter.node_split(&pos, &feature, &threshold)
                 is_leaf = is_leaf or (pos >= end)
@@ -1747,7 +1751,7 @@ cdef class Tree:
             node_id = self._add_node(parent, is_left, is_leaf, feature,
                                      threshold, impurity, n_node_samples)
 
-            splitter.node_value(self.value + node_id * self.value_stride)
+            memcpy(self.value + node_id * self.value_stride, tmp_value, self.value_stride * sizeof(double))
 
             if not is_leaf:
                 if stack_n_values + 10 > stack_capacity:
@@ -1774,6 +1778,7 @@ cdef class Tree:
         self._resize(self.node_count)
         self.splitter = None # Release memory
         free(stack)
+        free(tmp_value)
 
     cpdef predict(self, np.ndarray[DTYPE_t, ndim=2] X):
         """Predict target for X."""
